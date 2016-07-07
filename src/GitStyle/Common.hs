@@ -4,10 +4,7 @@ module GitStyle.Common where
   firstWord :: T.Text -> T.Text
   firstWord = head . T.words
 
-  isList :: T.Text -> Bool
-  isList t = True
-
   usesImperative :: T.Text -> Bool
-  usesImperative = T.isSuffixOf imperative . firstWord
+  usesImperative = not . T.isSuffixOf indicative . firstWord
                     where
-                      imperative = T.pack "ed"
+                      indicative = T.pack "ed"

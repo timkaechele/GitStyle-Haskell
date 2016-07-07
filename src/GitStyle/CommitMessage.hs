@@ -1,26 +1,40 @@
 module GitStyle.CommitMessage where
 
   import qualified Data.Text as T
-  import qualified Prelude as P
   import GitStyle.Line
 
   data CommitMessage = CommitMessage Lines
-                       deriving (P.Show, P.Eq)
+                       deriving (Show, Eq)
 
-  isMultiLine :: CommitMessage -> P.Bool
-  isMultiLine (CommitMessage l) = P.length l P.> 1
+  {-|
+    Returns True if the CommitMessage has multiple lines
+  -}
+  isMultiLine :: CommitMessage -> Bool
+  isMultiLine = (<) 1 . length . getLines
 
-
+  {-|
+    Extracts the subject line from the CommitMessage
+  -}
   subject :: CommitMessage -> Line
-  subject = P.head . getLines
+  subject = head . getLines
 
-  body :: CommitMessage -> Maybe Line
+  {-|
+    Extracts the subject lines from the CommitMessage
+  -}
+  body :: CommitMessage -> Lines
+  body = drop 2 . getLines
 
-  lines :: CommitMessage -> Lines
+  {-|
+    Returns all lines from the CommitMessage
+  -}
+  getLines :: CommitMessage -> Lines
   getLines (CommitMessage l) = l
 
-  buildFromString :: P.String -> CommitMessage
+  {-|
+    Builds a CommitMessage from the given String
+  -}
+  buildFromString :: String -> CommitMessage
   buildFromString s = CommitMessage lines
                         where
                           text = T.pack s
-                          lines = P.map (Line) (T.lines text)
+                          lines = map (Line) (T.lines text)

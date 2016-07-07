@@ -9,23 +9,46 @@ module GitStyle.Line where
 
   type Lines = [Line]
 
-  -- ^Returns the text of a line
+  {-|
+    Returns the text of a line
+  -}
   text :: Line -> T.Text
   text (Line t) = t
 
-  -- ^Calculates the length (char count) of a line
-  length :: Line -> Int
-  length = T.length . text
+  {-|
+    Calculates the length (char count) of a line
+  -}
+  textLength :: Line -> Int
+  textLength = T.length . text
 
   {-|
     Checks if the line is part of an enumeration
     Enumerations start with '-' or '*'
   -}
   isEnumeration :: Line -> Bool
-  isEnumeration l = elem firstChar enumerations
-                      where
-                        firstChar = (T.head . T.strip . text) l
-                        enumerations = ['-', '*']
+  isEnumeration l = elem (firstChar l) enumerations
+
+  {-|
+    Returns the first non whitespace char from the line
+  -}
+  firstChar :: Line -> Char
+  firstChar = T.head . T.strip . text
+
+  {-|
+    A list with all enumeration chars
+  -}
+  enumerations :: [Char]
+  enumerations = ['-', '*']
+
+  {-|
+    Removes enumeration chars from the line
+  -}
+  sanitize :: Line -> Line
+  sanitize l
+           | isEnumeration l = Line (sanitize' l)
+           | otherwise = l
+           where
+            sanitize' = T.strip . T.drop 1 . T.strip . text
 
   {-|
     Strips the line from trailing whitespace and checks
@@ -40,7 +63,7 @@ module GitStyle.Line where
     Checks if the line starts with an upper case letter
   -}
   startsWithUpperCase :: Line -> Bool
-  startsWithUpperCase = Char.isUpper . T.head . text
+  startsWithUpperCase = Char.isUpper . firstChar
 
   {-|
     Checks if the line ends with a dot '.'

@@ -2,23 +2,24 @@ name:                gitstyle
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            https://github.com/githubuser/gitstyle#readme
+homepage:            https://github.com/timkaechele/gitstyle-haskell#readme
 license:             MIT
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2016 Author name here
-category:            Web
+author:              Tim Kächele
+maintainer:          mail@timkaechele.me
+copyright:           2016 Tim Kächele
+category:            Git
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     GitStyle.Types
-                     , GitStyle.Common
+  exposed-modules:     GitStyle.Common
                      , GitStyle.CommitMessage
                      , GitStyle.Line
+                     , GitStyle.Validations
+                     , GitStyle.Error
   build-depends:       base >= 4.7 && < 5
                      , text
                      , containers
@@ -47,4 +48,4 @@ test-suite gitstyle-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/gitstyle
+  location: https://github.com/timkaechele/gitstyle-haskell
