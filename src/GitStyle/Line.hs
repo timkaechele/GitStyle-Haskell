@@ -1,6 +1,6 @@
 module GitStyle.Line where
 
-  import qualified GitStyle.Common as Common
+  import GitStyle.Common
   import qualified Data.Text as T
   import qualified Data.Char as Char
 
@@ -70,3 +70,22 @@ module GitStyle.Line where
   -}
   endsWithDot :: Line -> Bool
   endsWithDot = (==) '.' . T.last . text
+
+  {-|
+    Returns a list with the line lengths of the given lines
+  -}
+  lineLengths :: Lines -> [Int]
+  lineLengths = map textLength
+
+  removeFromLine :: T.Text -> Line -> Line
+  removeFromLine w = Line . normalizeSpacing . delete . text
+                      where
+                        delete = (T.replace w T.empty)
+                        normalizeSpacing = T.strip . T.unwords . T.words
+  {-|
+    Filters lines that meat a certain criteria and returns the line numbers
+    of those lines.
+    The first argument is the initial line number.
+  -}
+  filterLines :: Int -> ((Int, Line) -> Bool) -> Lines -> [Int]
+  filterLines s f = (map fst . filter f . withCount s)

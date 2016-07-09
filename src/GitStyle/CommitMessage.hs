@@ -13,16 +13,26 @@ module GitStyle.CommitMessage where
   isMultiLine = (<) 1 . length . getLines
 
   {-|
+    Checks if the string "!!FORCE!!" is in the subject line.
+    If so the function returns false.
+  -}
+  isValidatable :: CommitMessage -> Bool
+  isValidatable = T.isInfixOf (T.pack "!!FORCE!!") . text . subject
+
+
+  sanitize :: CommitMessage -> CommitMessage
+
+  {-|
     Extracts the subject line from the CommitMessage
   -}
   subject :: CommitMessage -> Line
   subject = head . getLines
 
   {-|
-    Extracts the subject lines from the CommitMessage
+    Extracts the body lines from the CommitMessage
   -}
   body :: CommitMessage -> Lines
-  body = drop 2 . getLines
+  body = drop 1 . getLines
 
   {-|
     Returns all lines from the CommitMessage
