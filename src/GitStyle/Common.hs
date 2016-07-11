@@ -21,8 +21,14 @@ module GitStyle.Common where
     The output looks something like this
     showList [1,2,3] = "1, 2, 3"
   -}
-  showList :: (Show a) => [a] -> T.Text
-  showList = T.pack . L.intercalate ", ". (map show)
+  formatList :: (Show a) => [a] -> T.Text
+  formatList = T.pack . L.intercalate ", ". (map show)
+
+  {-|
+    Adds a dotfile comment sign ('#') in front of the given strings
+  -}
+  commentate :: [String] -> [String]
+  commentate = map ((++) "# ")
 
   {-|
     Accepts a starting position and a list and returns
@@ -33,10 +39,3 @@ module GitStyle.Common where
   withCount :: Int -> [a] -> [(Int, a)]
   withCount p = zip [p..]
 
-  {-|
-    Formats a list of showable items.
-
-    listFormat [1, 2, 3] = ["- 1", "- 2", "- 3"]
-  -}
-  listFormat :: Show a => [a] -> [String]
-  listFormat = map ((++) "- " . show)

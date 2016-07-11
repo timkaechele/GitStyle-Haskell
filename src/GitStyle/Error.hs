@@ -1,6 +1,7 @@
 module GitStyle.Error where
 
   import qualified Data.List as L
+  import GitStyle.Common
 
   type LineNumber = Int
 
@@ -11,6 +12,8 @@ module GitStyle.Error where
              | BodyNoEmptyLine
              | BodyLength [LineNumber]
              deriving (Eq)
+
+  type Errors = [Error]
 
   {-|
     To show an error just call the error message
@@ -29,4 +32,17 @@ module GitStyle.Error where
   errorMessage BodyNoEmptyLine = "The body doesn't start with an empty line."
   errorMessage (BodyLength l) = "The body is too long in Line " ++ lines ++ "."
                                   where
-                                    lines = (L.intercalate ", " . map show) l
+                                    lines = (show . formatList) l
+
+  {-|
+    Transforms the errors to human readable text and
+    formats them as a list
+
+    prettyErrors [SubjectTrailingDot] = ["- The subject ends with a dot.\n"]
+  -}
+  prettyErrors :: [Error] -> [String]
+  prettyErrors = listString
+                  where
+                    listFormat = map ((++) "- " . show)
+                    listString =  map (\l -> l ++ "\n") . listFormat
+

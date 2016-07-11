@@ -5,9 +5,12 @@ module GitStyle.Line where
   import qualified Data.Char as Char
 
   data Line = Line T.Text
-              deriving (Show, Eq)
+              deriving (Eq)
 
   type Lines = [Line]
+
+  instance Show Line where
+    show l = (show . T.concat) [text l, T.pack "\n"]
 
   {-|
     Returns the text of a line
@@ -43,12 +46,12 @@ module GitStyle.Line where
   {-|
     Removes enumeration chars from the line
   -}
-  sanitize :: Line -> Line
-  sanitize l
-           | isEnumeration l = Line (sanitize' l)
+  removeEnum :: Line -> Line
+  removeEnum l
+           | isEnumeration l = Line (remove' l)
            | otherwise = l
            where
-            sanitize' = T.strip . T.drop 1 . T.strip . text
+            remove' = T.strip . T.drop 1 . T.strip . text
 
   {-|
     Strips the line from trailing whitespace and checks

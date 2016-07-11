@@ -11,8 +11,14 @@ module GitStyle.Validations where
 
   data Validation = Validation [Validator] CommitMessage
 
-  validate :: Validation -> [E.Error]
-  validate (Validation v c) = (catMaybes . map ($ c)) v
+  validate :: Validation -> CommitMessage
+  validate (Validation v c)
+            | hasErrors = InvalidCommitMessage (getLines c) result
+            | otherwise = ValidCommitMessage (getLines c)
+            where
+              result = (catMaybes . map ($ c)) v
+              hasErrors = (not . null) result
+
 
   subjectNoDot :: CommitMessage -> Maybe E.Error
   subjectNoDot c
@@ -54,7 +60,7 @@ module GitStyle.Validations where
               longLines = filterLines 0 (\(p, l) -> textLength l > 72) . body
               hasLongLines = (not . null . longLines)
 
-  chrisBeamsValidate :: CommitMessage -> [E.Error]
+  chrisBeamsValidate :: CommitMessage -> CommitMessage
   chrisBeamsValidate = validate . Validation validations
                         where
                           validations = [
