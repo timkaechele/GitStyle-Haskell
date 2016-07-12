@@ -17,7 +17,13 @@ $ stack build
 ## Usage
 
 ```sh
-$ git-style install /path/to/your/repo
+$ git-style /path/to/the/commit/message
+```
+
+The best way to install git-style is by adding a new git hooks template
+
+```
+
 ```
 
 After installation the style checker is run every time you commit something.

@@ -1,66 +1,66 @@
 module GitStyle.Validations where
 
-  import GitStyle.Common
-  import GitStyle.Line
-  import GitStyle.CommitMessage
-  import qualified GitStyle.Error as E
-  import qualified Data.Text as T
   import Data.Maybe
+  import Data.List (findIndices)
 
-  type Validator = (CommitMessage -> Maybe E.Error)
+  import qualified GitStyle.Line as L
+  import qualified GitStyle.Error as E
+  import qualified GitStyle.CommitMessage as C
 
-  data Validation = Validation [Validator] CommitMessage
+  type Validator = (C.CommitMessage -> Maybe E.Error)
 
-  validate :: Validation -> CommitMessage
+  data Validation = Validation [Validator] C.CommitMessage
+
+  validate :: Validation -> C.CommitMessage
   validate (Validation v c)
-            | hasErrors = InvalidCommitMessage (getLines c) result
-            | otherwise = ValidCommitMessage (getLines c)
+            | hasErrors = C.makeInvalid c result
+            | otherwise = C.makeValid c
             where
               result = (catMaybes . map ($ c)) v
               hasErrors = (not . null) result
 
-
-  subjectNoDot :: CommitMessage -> Maybe E.Error
+  subjectNoDot :: C.CommitMessage -> Maybe E.Error
   subjectNoDot c
-               | (endsWithDot . subject) c = Just E.SubjectTrailingDot
-               | otherwise                 = Nothing
+               | (L.endsWithDot . C.subject) c = Just E.SubjectTrailingDot
+               | otherwise                     = Nothing
 
-  subjectLength :: CommitMessage -> Maybe E.Error
+  subjectLength :: C.CommitMessage -> Maybe E.Error
   subjectLength c
-             | correctSubjectLength = Just E.SubjectLength
+             | not correctSubjectLength = Just E.SubjectLength
              | otherwise            = Nothing
               where
-                correctSubjectLength = (textLength . subject) c > 50
+                correctSubjectLength = ((>=) 50 . L.lineLength . C.subject) c
 
-  subjectImperative :: CommitMessage -> Maybe E.Error
+  subjectImperative :: C.CommitMessage -> Maybe E.Error
   subjectImperative c
-             | not isImperative = Just E.SubjectIndicative
-             | otherwise        = Nothing
+             | not imperative = Just E.SubjectIndicative
+             | otherwise      = Nothing
               where
-                isImperative = (usesImperative . text . subject) c
+                imperative = (L.isImperative . C.subject) c
 
-  subjectUpperCase :: CommitMessage -> Maybe E.Error
+  subjectUpperCase :: C.CommitMessage -> Maybe E.Error
   subjectUpperCase c
              | (not . isUpperCase) c = Just E.SubjectNoUpperCase
              | otherwise       = Nothing
               where
-                isUpperCase = (startsWithUpperCase . subject)
+                isUpperCase = (L.startsWithUpperCase . C.subject)
 
-  bodyEmptyLine :: CommitMessage -> Maybe E.Error
+  bodyEmptyLine :: C.CommitMessage -> Maybe E.Error
   bodyEmptyLine c
-                | (not . isMultiLine) c           = Nothing
-                | (not . isBlank . head . body) c = Just E.BodyNoEmptyLine
-                | otherwise                       = Nothing
+                | (not . C.isMultiLine) c = Nothing
+                | (not . L.isBlank . head . C.body) c = Just E.BodyNoEmptyLine
+                | otherwise               = Nothing
 
-  bodyLength :: CommitMessage -> Maybe E.Error
+  bodyLength :: C.CommitMessage -> Maybe E.Error
   bodyLength c
-             | hasLongLines c = Just (E.BodyLength (longLines c))
-             | otherwise      = Nothing
+             | hasLongLines = Just (E.BodyLength humanLines)
+             | otherwise    = Nothing
              where
-              longLines = filterLines 0 (\(p, l) -> textLength l > 72) . body
-              hasLongLines = (not . null . longLines)
+              longLines = (findIndices ((<) 50 . L.lineLength) . C.body) c
+              hasLongLines = (not . null) longLines
+              humanLines = map ((+) 1) longLines
 
-  chrisBeamsValidate :: CommitMessage -> CommitMessage
+  chrisBeamsValidate :: C.CommitMessage -> C.CommitMessage
   chrisBeamsValidate = validate . Validation validations
                         where
                           validations = [

@@ -15,12 +15,10 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     GitStyle.Common
-                     , GitStyle.CommitMessage
+  exposed-modules:     GitStyle.CommitMessage
                      , GitStyle.Line
                      , GitStyle.Validations
                      , GitStyle.Error
-                     , GitStyle.Executable
   build-depends:       base >= 4.7 && < 5
                      , text
                      , containers

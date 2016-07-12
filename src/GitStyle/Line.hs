@@ -1,94 +1,163 @@
-module GitStyle.Line where
+module GitStyle.Line(Line,
+                     Lines(..),
+                     pack,
+                     lineLength,
+                     endsWith,
+                     endsWithDot,
+                     isImperative,
+                     isBlank,
+                     startsWithUpperCase,
+                     containsWord,
+                     removeFromLine,
+                     replaceFirstLine,
+                     commentate,
+                     toEnumLine
+                     ) where
 
-  import GitStyle.Common
   import qualified Data.Text as T
-  import qualified Data.Char as Char
+  import qualified Data.Char as C
+  import Data.Maybe
 
-  data Line = Line T.Text
-              deriving (Eq)
+  data Line = EmptyLine
+            | Line T.Text
+            deriving (Eq)
 
   type Lines = [Line]
 
   instance Show Line where
-    show l = (show . T.concat) [text l, T.pack "\n"]
+    show = show . getText
+
 
   {-|
-    Returns the text of a line
+    Wraps the given text in a line.
   -}
-  text :: Line -> T.Text
-  text (Line t) = t
+  packFromText :: T.Text -> Line
+  packFromText t
+               | text == T.empty = EmptyLine
+               | otherwise       = Line text
+               where
+                text = T.strip t
 
   {-|
-    Calculates the length (char count) of a line
+    Wraps the given string in a line.
   -}
-  textLength :: Line -> Int
-  textLength = T.length . text
+  pack :: String -> Line
+  pack s = packFromText (T.pack s)
 
   {-|
-    Checks if the line is part of an enumeration
-    Enumerations start with '-' or '*'
+    Returns the line length (character count) of the line
   -}
-  isEnumeration :: Line -> Bool
-  isEnumeration l = elem (firstChar l) enumerations
+  lineLength :: Line -> Int
+  lineLength = T.length . getText
 
   {-|
-    Returns the first non whitespace char from the line
-  -}
-  firstChar :: Line -> Char
-  firstChar = T.head . T.strip . text
-
-  {-|
-    A list with all enumeration chars
-  -}
-  enumerations :: [Char]
-  enumerations = ['-', '*']
-
-  {-|
-    Removes enumeration chars from the line
-  -}
-  removeEnum :: Line -> Line
-  removeEnum l
-           | isEnumeration l = Line (remove' l)
-           | otherwise = l
-           where
-            remove' = T.strip . T.drop 1 . T.strip . text
-
-  {-|
-    Strips the line from trailing whitespace and checks
-    if the resulting line is empty.
+    Checks if the given line is blank (no characters
+    or only whitespace)
   -}
   isBlank :: Line -> Bool
-  isBlank l = strippedText l == T.empty
-              where
-                strippedText = T.strip . text
+  isBlank EmptyLine = True
+  isBlank _ = False
 
   {-|
-    Checks if the line starts with an upper case letter
+    Returns the text of the line.
+    If the line is empty you get an empty text.
   -}
-  startsWithUpperCase :: Line -> Bool
-  startsWithUpperCase = Char.isUpper . firstChar
+  getText :: Line -> T.Text
+  getText EmptyLine = T.empty
+  getText (Line t) = t
+
+  endsWith :: T.Text -> Line -> Bool
+  endsWith _ EmptyLine = False
+  endsWith t l = (T.isSuffixOf t . getText) l
 
   {-|
-    Checks if the line ends with a dot '.'
+    Checks if the given line ends with a dot (".").
   -}
   endsWithDot :: Line -> Bool
-  endsWithDot = (==) '.' . T.last . text
+  endsWithDot = endsWith (T.pack ".")
 
   {-|
-    Returns a list with the line lengths of the given lines
+    If the line is empty Nothing will be returned,
+    otherwise just the first word.
   -}
-  lineLengths :: Lines -> [Int]
-  lineLengths = map textLength
+  firstWord :: Line -> Maybe T.Text
+  firstWord EmptyLine = Nothing
+  firstWord l = (Just . head . T.words . getText) l
 
+  {-|
+    Checks if a given word is contained in the line
+  -}
+  containsWord :: T.Text -> Line -> Bool
+  containsWord _ EmptyLine = False
+  containsWord w l = (T.isInfixOf w . getText) l
+
+  {-|
+    Inspects the first word of the line and checks if it
+    uses an imperative mood.
+  -}
+  isImperative :: Line -> Bool
+  isImperative = not . indicative . fromMaybe (T.pack "") . firstWord
+                  where
+                    indicative = T.isSuffixOf (T.pack "ed")
+
+  {-|
+    Checks if the line starts with an upper case character
+  -}
+  startsWithUpperCase :: Line -> Bool
+  startsWithUpperCase l
+                      | w == Nothing = False
+                      | otherwise    = (C.isUpper . T.head . fromJust) w
+                        where
+                          w = firstWord l
+
+
+  {-|
+    Removes the given text from the line
+  -}
   removeFromLine :: T.Text -> Line -> Line
-  removeFromLine w = Line . normalizeSpacing . delete . text
+  removeFromLine _ EmptyLine = EmptyLine
+  removeFromLine t l = (packFromText . cleanup . replace . getText) l
                       where
-                        delete = (T.replace w T.empty)
-                        normalizeSpacing = T.strip . T.unwords . T.words
+                        cleanup = T.unwords . T.words
+                        replace = T.replace t T.empty
+
   {-|
-    Filters lines that meat a certain criteria and returns the line numbers
-    of those lines.
-    The first argument is the initial line number.
+    Takes a list of lines and line
+    and replaces the first line in the list with
+    the given line
   -}
-  filterLines :: Int -> ((Int, Line) -> Bool) -> Lines -> [Int]
-  filterLines s f = (map fst . filter f . withCount s)
+  replaceFirstLine :: Lines -> Line -> Lines
+  replaceFirstLine [] _ = []
+  replaceFirstLine (x:xs) l = l : xs
+
+  {-|
+    Adds the given text to the front of the line.
+    This is an O(n) operation due to array like
+    character of line.
+  -}
+  addFront :: T.Text -> Line -> Line
+  addFront t EmptyLine = packFromText t
+  addFront t l = (packFromText . T.concat) [t, getText l]
+
+  {-|
+    Commentates the given line
+
+    let l = pack "Hello World"
+    commentate l -- "# Hello World"
+  -}
+  commentate :: Line -> Line
+  commentate = addFront (T.pack "# ")
+
+  {-|
+    Adds an enumeration sign to the line
+
+    let l = pack "Hello World"
+    toEnumLine l -- "- Hello World"
+  -}
+  toEnumLine :: Line -> Line
+  toEnumLine EmptyLine = EmptyLine
+  toEnumLine l = addFront (T.pack "- ") l
+
+  printableLine :: Line -> String
+  printableLine EmptyLine = "\n"
+  printableLine (Line t) = (show t) ++ "\n"
