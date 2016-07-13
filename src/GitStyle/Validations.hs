@@ -26,7 +26,6 @@ module GitStyle.Validations where
                | (L.endsWithDot . C.subject) c = Just E.SubjectTrailingDot
                | otherwise                     = Nothing
 
-
   {-|
     Checks that the subject line doesn't exceed a length of 50 characters.
   -}
@@ -36,7 +35,6 @@ module GitStyle.Validations where
              | otherwise            = Nothing
               where
                 correctSubjectLength = ((>=) 50 . L.lineLength . C.subject) c
-
 
   {-|
     Checks that the first word of the commit is in an imperative mood.
@@ -69,7 +67,6 @@ module GitStyle.Validations where
                 | (not . C.isMultiLine) c = Nothing
                 | (not . L.isBlank . head . C.body) c = Just E.BodyNoEmptyLine
                 | otherwise               = Nothing
-
 
   {-|
     Validates the line lengths of the body.

@@ -3,4 +3,5 @@ extra-package-dbs: []
 packages:
 - '.'
 extra-deps:
+- text-1.2.2.1
 resolver: ghc-8.0.1

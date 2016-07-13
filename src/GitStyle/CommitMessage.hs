@@ -5,12 +5,14 @@ module GitStyle.CommitMessage(CommitMessage,
                               subject,
                               body,
                               makeValid,
-                              makeInvalid) where
+                              makeInvalid,
+                              lineifyErrors,
+                              printableCommit,) where
 
   import qualified GitStyle.Line as L
   import qualified GitStyle.Error as E
   import qualified Data.Text as T
-  import qualified Data.Text as T
+  import qualified Data.List as List
 
   data CommitMessage = CommitMessage L.Lines
                      | ValidatableCommitMessage L.Lines
@@ -66,3 +68,21 @@ module GitStyle.CommitMessage(CommitMessage,
   getErrors :: CommitMessage -> E.Errors
   getErrors (InValidCommitMessage _ e) = e
   getErrors _ = []
+
+  {-|
+    Transforms the errors of the commit message to lines
+    The resulting lines are formatted as an enumeration.
+
+    printableErrors e -- ["- this is an error"]
+  -}
+  lineifyErrors :: CommitMessage -> L.Lines
+  lineifyErrors c
+                  | isValid c = [L.pack "Everythings fine."]
+                  | otherwise = (map (L.toEnumLine . E.toLine) . getErrors) c
+
+  printableCommit :: CommitMessage -> T.Text
+  printableCommit c = (foldl T.append (T.pack "")) l
+                      where
+                        e = map L.commentate (lineifyErrors c)
+                        l = map (L.printableLine) (getLines c ++ e)
+

@@ -11,7 +11,8 @@ module GitStyle.Line(Line,
                      removeFromLine,
                      replaceFirstLine,
                      commentate,
-                     toEnumLine
+                     toEnumLine,
+                     printableLine
                      ) where
 
   import qualified Data.Text as T
@@ -109,7 +110,6 @@ module GitStyle.Line(Line,
                         where
                           w = firstWord l
 
-
   {-|
     Removes the given text from the line
   -}
@@ -131,7 +131,7 @@ module GitStyle.Line(Line,
 
   {-|
     Adds the given text to the front of the line.
-    This is an O(n) operation due to array like
+    This is an O(n) operation due to the array like
     character of line.
   -}
   addFront :: T.Text -> Line -> Line
@@ -159,10 +159,12 @@ module GitStyle.Line(Line,
 
   {-|
     Formats the line as a string of text with a trailing new line char.
+    The function performs in O(n) time.
+
 
     let l = pack "Hello World"
     printableLine l -- "Hello World\n"
   -}
-  printableLine :: Line -> String
-  printableLine EmptyLine = "\n"
-  printableLine (Line t) = (show t) ++ "\n"
+  printableLine :: Line -> T.Text
+  printableLine EmptyLine = T.pack "\n"
+  printableLine (Line t) = T.append t (T.pack "\n")
