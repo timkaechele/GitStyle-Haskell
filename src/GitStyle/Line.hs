@@ -27,7 +27,6 @@ module GitStyle.Line(Line,
   instance Show Line where
     show = show . getText
 
-
   {-|
     Wraps the given text in a line.
   -}
@@ -158,6 +157,12 @@ module GitStyle.Line(Line,
   toEnumLine EmptyLine = EmptyLine
   toEnumLine l = addFront (T.pack "- ") l
 
+  {-|
+    Formats the line as a string of text with a trailing new line char.
+
+    let l = pack "Hello World"
+    printableLine l -- "Hello World\n"
+  -}
   printableLine :: Line -> String
   printableLine EmptyLine = "\n"
   printableLine (Line t) = (show t) ++ "\n"

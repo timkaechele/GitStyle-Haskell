@@ -62,3 +62,7 @@ module GitStyle.CommitMessage(CommitMessage,
   makeInvalid :: CommitMessage -> E.Errors -> CommitMessage
   makeInvalid (ValidatableCommitMessage l) e = InValidCommitMessage l e
   makeInvalid c _ = c
+
+  getErrors :: CommitMessage -> E.Errors
+  getErrors (InValidCommitMessage _ e) = e
+  getErrors _ = []
